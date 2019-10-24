@@ -9,7 +9,7 @@ library(tidyverse)
 
 
 ```{r}
-setwd("D:/DA project/fifa-20-complete-player-dataset")
+setwd("D:/5th_Sem_pdfs/Data_Analytics/Ajeya_Data-Analytics/fifa-20-complete-player-dataset")
 data_19=read.csv("players_19.csv")
 #data_19 <-data_19 %>% na.omit()
 data_18=read.csv("players_18.csv")
@@ -112,6 +112,7 @@ data1b$preferred_foot=factor(data1b$preferred_foot)
 #data1b
 
 y <- data1b$value_eur
+x = subset(data1b,select = -c(value_eur,continent)) %>% data.matrix()
 data1b$value_eur <- NULL
 model1 <- lm(y ~ ., data = data1b)
 #print(summary(model1))
@@ -130,7 +131,64 @@ round(summary(model1)$adj.r.squared,5)
 ```
 
 ```{r}
-#ridge regression
+#Ridge regression
+set.seed(101) #For randomizing the data for the train and test split. And also should have same version of randomized set each time it is executed
+sample <- sample.int(n = nrow(x), size = floor(.8*nrow(x)), replace = F) #Sampling the data for the train and test split.
+x_train <- x[sample, ]
+x_test  <- x[-sample, ]
+#Taking the log transform on the values of the target variable as the values are high in comparision of the features.
+y <- y_log %>% data.matrix()
+y_train <- y[sample,]
+y_test <- y[-sample,]
+#Initializing the values of the lambdas over which the ridge model is cross validated for finding the optimum lambda which gives the least loss.
+lambdas = 10^seq(3,-2,by = -.1)
+#Initializing the cross validation ridge model by giving the alpha parameter as the 0.
+ridge_model = cv.glmnet(x_train, y_train, alpha = 0, lambda = lambdas)
+plot(ridge_model)
+#Getting the optimum lambda value obtained from the cross validation.
+ridge_opt_lambda = ridge_model$lambda.min
+ridge_opt_lambda
+#Using the optimized lambda value for initializing the ridge model
+optimized_ridge_model = glmnet(x_train,y_train,alpha = 0)
+ridge_coefficients = predict(optimized_ridge_model,type = "coefficients",s = ridge_opt_lambda)
+#Coefficients obtained from the optimized ridge model
+ridge_coefficients@x
+y_ridge_predicted = predict(ridge_model,s = ridge_opt_lambda, x_test)
+#Using the predicted and the original values to calculate r squared value for the model
+rsq <- function(x,y) cor(x,y)^2
+ridge_rsq <- rsq(y_ridge_predicted,y_test)
+#Calculating the root mean squared error for the predicted values.
+ridge_rmse = rmse(y_test,y_ridge_predicted)
+ridge_rmse
+```
+
+```{r}
+#Lasso Regression
+set.seed(101)#For randomizing the data for the train and test split. And also should have same version of randomized set each time it is executed
+sample <- sample.int(n = nrow(x), size = floor(.8*nrow(x)), replace = F)#Sampling the data for the train and test split.
+x_train <- x[sample, ]
+x_test  <- x[-sample, ]
+#Taking the log transform on the values of the target variable as the values are high in comparision of the features.
+y <- y_log %>% data.matrix()
+y_train <- y[sample,]
+y_test <- y[-sample,]
+#Initializing the cross validation ridge model by giving the alpha parameter as the 1.
+lasso_model = cv.glmnet(x_train, y_train, alpha = 1,lambda = lambdas)
+plot(lasso_model)
+#Getting the optimum lambda value obtained from the cross validation
+lasso_opt_lambda =lasso_model$lambda.min
+lasso_opt_lambda
+#Using the optimized lambda value for initializing the ridge model
+optimized_lasso_model = glmnet(x_train,y_train,alpha = 1)
+lasso_coefficients = predict(optimized_lasso_model,type = "coefficients",s = lasso_opt_lambda)
+lasso_coefficients@x
+y_lasso_predicted = predict(lasso_model,s = lasso_opt_lambda, x_test)
+#Using the predicted and the original values to calculate r squared value for the model
+rsq <- function(x,y) cor(x,y)^2
+lasso_rsq <- rsq(y_lasso_predicted,y_test)
+#Calculating the root mean squared error for the predicted values.
+ridge_rmse = rmse(y_test,y_lasso_predicted)
+ridge_rmse
 ```
 
 
