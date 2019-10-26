@@ -1,0 +1,220 @@
+```{r}
+library(dplyr)
+library(corrplot)
+library(glmnet)
+library(countrycode)
+library(data.table)
+library(tidyverse)
+```
+
+
+```{r}
+setwd("D:/5th_Sem_pdfs/Data_Analytics/Ajeya_Data-Analytics/fifa-20-complete-player-dataset")
+data_19=read.csv("players_19.csv")
+#data_19 <-data_19 %>% na.omit()
+data_18=read.csv("players_18.csv")
+#data_18 <-data_18 %>% na.omit()
+data_17=read.csv("players_17.csv")
+#data_17 <-data_17 %>% na.omit()
+data_16=read.csv("players_16.csv")
+#data_16 <-data_16 %>% na.omit()
+data_20=read.csv("players_20.csv")
+#data_20 <-data_20 %>% na.omit()
+
+
+```
+```{r}
+data_19$ID<-NULL
+data_19$player_url <- NULL
+data_19$dob <- NULL
+data_19$real_face <- NULL
+data_19$player_traits <- NULL
+data_19$long_name <- NULL
+data_19$player_tags <- NULL
+data_19$body_type <- NULL
+data_19 <- data_19 %>% filter(data_19$value_eur!=0 )
+#columns which are not needed are made null
+data_19 <- data_19[-c(72:98)]
+#columns which have the ratig of players at various positions are ignored at the moment.
+data_19_high=subset(data_19,overall>69)
+data_19_low=subset(data_19,overall<=69)
+#data is split into 2 classes as the box plot has a lot of outliers which are due to the players who are really good
+data_19$continent=countrycode(sourcevar = data_19[, 6],
+                              origin = "country.name",
+                              destination = "continent")
+for(i in 1:nrow(data_19)){
+  if(data_19[i,6]=="England" | data_19[i,6]=="Northern Ireland" | data_19[i,6]=="Wales" | data_19[i,6]=="Scotland" | data_19[i,6]=="Kosovo"){
+    data_19[i,]$continent="Europe"
+  }
+  if(data_19[i,6]=="São Tomé & Príncipe"|data_19[i,6]=="Central African Rep."|data_19[i,6]== "SÃ£o TomÃ© & PrÃ�ncipe"){
+    data_19[i,]$continent="Africa"
+  }
+}
+#players grouped into continents
+data_19$player_positions=as.character(data_19$player_positions)
+data_19$primary_position <- map(data_19$player_positions,function(x) trimws(unlist(strsplit(x,',')))[1])
+data_19$primary_position <- unlist(data_19$primary_position)
+```
+
+
+```{r}
+#new column for grouping a player based on which part of the field he plays
+data_19$pos=data_19$primary_position
+for(i in 1:nrow(data_19)){
+  if(data_19[i,]$primary_position=="ST" | data_19[i,]$primary_position=="LW" | data_19[i,]$primary_position=="RW" | data_19[i,]$primary_position=="CF" | data_19[i,]$primary_position=="RF" | data_19[i,]$primary_position=="LF" | 
+     data_19[i,]$primary_position=="RS" |data_19[i,]$primary_position=="LS" ){
+    data_19[i,]$pos="Forward"
+  }
+  if(data_19[i,]$primary_position=="CM" |data_19[i,]$primary_position=="LM" |data_19[i,]$primary_position=="LDM" |data_19[i,]$primary_position=="RM" |data_19[i,]$primary_position=="CDM" |data_19[i,]$primary_position=="CAM" |data_19[i,]$primary_position=="RDM" |data_19[i,]$primary_position=="LAM" |data_19[i,]$primary_position=="RAM" |data_19[i,]$primary_position=="LCM" |data_19[i,]$primary_position=="RCM" ){
+    data_19[i,]$pos="Midfielder"
+  }
+  if(data_19[i,]$primary_position=="LCB" |data_19[i,]$primary_position=="RCB" |data_19[i,]$primary_position=="LWB" |data_19[i,]$primary_position=="RWB" |
+     data_19[i,]$primary_position=="LB" |data_19[i,]$primary_position=="CB" |data_19[i,]$primary_position=="RB" ){
+    data_19[i,]$pos="Back"
+  }
+  if(data_19[i,]$primary_position=="GK" ){
+    data_19[i,]$pos="Keeper"
+  }
+}
+#primary position column having the players'best/favourite position
+data_19_strikers <- data_19 %>% filter(data_19$primary_position %in% c("ST","RW","LW","CF","RF","LF","RS","LS"))
+data_19_midfielders <-  data_19 %>% filter(data_19$primary_position %in% c("RCM","LCM","CM","LM","RM","CDM","LDM","RDM","LAM","CAM","RAM"))
+data_19_defenders <- data_19 %>% filter(data_19$primary_position %in% c("CB","LB","RB","RCB","LCB","RWB","LWB"))
+data_19_goalkeepers <- data_19 %>% filter(data_19$primary_position %in% c("GK"))
+q <- colnames(data_19_defenders)
+
+#separate dataframes created for each role
+q <- grep("^gk_+",q,value = TRUE)
+p <- c("pace","shooting","passing","dribbling","defending","physic")
+data_19_strikers <- data_19_strikers[,!names(data_19_strikers) %in% q]
+data_19_defenders <- data_19_defenders[,!names(data_19_defenders) %in% q]
+data_19_midfielders <- data_19_midfielders[,!names(data_19_midfielders) %in% q]
+data_19_goalkeepers <- data_19_goalkeepers[,!names(data_19_goalkeepers) %in% p]
+data_19_strikers$position<-"F"
+data_19_defenders$position<-"B"
+data_19_midfielders$position<-"M"
+data_19_goalkeepers$position<-"K"
+#The columns which have gk attributes have been set to NULL for players who are not goalkeepers, and the attributes which do not matter for a goalkeeper have been set to  NULL for players who are not goalkeepers.
+```
+
+
+```{r}
+
+data1b=data_19[,c(3,6,7,8,10,14,13,15,16,17,23,72,73)]
+#only the variables which are valid to construct the model are taken
+data1b$club=factor(data1b$club)
+data1b$nationality=factor(data1b$nationality)
+data1b$primary_position=factor(unlist(data1b$primary_position))
+data1b$work_rate=factor(data1b$work_rate)
+data1b$preferred_foot=factor(data1b$preferred_foot)
+#categorical variables factored
+#datacor=cor(data1b)
+#data1b
+
+y <- data1b$value_eur
+x = subset(data1b,select = -c(value_eur,continent)) %>% data.matrix()
+data1b$value_eur <- NULL
+model1 <- lm(y ~ ., data = data1b)
+#print(summary(model1))
+#plot(model1)
+#hist(y)
+y_log=log(y)
+#data transformation to make residuals not to follow a pattern
+#hist(y_log)
+model1 <- lm(y_log ~ ., data = data1b)
+
+#print(summary(model1))
+plot(model1,which=c(1,2))
+#residual plot and qq plot
+round(summary(model1)$adj.r.squared,5)
+#adjusted r^2
+```
+
+```{r}
+#Ridge regression
+set.seed(101) #For randomizing the data for the train and test split. And also should have same version of randomized set each time it is executed
+sample <- sample.int(n = nrow(x), size = floor(.8*nrow(x)), replace = F) #Sampling the data for the train and test split.
+x_train <- x[sample, ]
+x_test  <- x[-sample, ]
+#Taking the log transform on the values of the target variable as the values are high in comparision of the features.
+y <- y_log %>% data.matrix()
+y_train <- y[sample,]
+y_test <- y[-sample,]
+#Initializing the values of the lambdas over which the ridge model is cross validated for finding the optimum lambda which gives the least loss.
+lambdas = 10^seq(3,-2,by = -.1)
+#Initializing the cross validation ridge model by giving the alpha parameter as the 0.
+ridge_model = cv.glmnet(x_train, y_train, alpha = 0, lambda = lambdas)
+plot(ridge_model)
+#Getting the optimum lambda value obtained from the cross validation.
+ridge_opt_lambda = ridge_model$lambda.min
+ridge_opt_lambda
+#Using the optimized lambda value for initializing the ridge model
+optimized_ridge_model = glmnet(x_train,y_train,alpha = 0)
+ridge_coefficients = predict(optimized_ridge_model,type = "coefficients",s = ridge_opt_lambda)
+#Coefficients obtained from the optimized ridge model
+ridge_coefficients@x
+y_ridge_predicted = predict(ridge_model,s = ridge_opt_lambda, x_test)
+#Using the predicted and the original values to calculate r squared value for the model
+rsq <- function(x,y) cor(x,y)^2
+ridge_rsq <- rsq(y_ridge_predicted,y_test)
+#Calculating the root mean squared error for the predicted values.
+ridge_rmse = rmse(y_test,y_ridge_predicted)
+ridge_rmse
+```
+
+```{r}
+#Lasso Regression
+set.seed(101)#For randomizing the data for the train and test split. And also should have same version of randomized set each time it is executed
+sample <- sample.int(n = nrow(x), size = floor(.8*nrow(x)), replace = F)#Sampling the data for the train and test split.
+x_train <- x[sample, ]
+x_test  <- x[-sample, ]
+#Taking the log transform on the values of the target variable as the values are high in comparision of the features.
+y <- y_log %>% data.matrix()
+y_train <- y[sample,]
+y_test <- y[-sample,]
+#Initializing the cross validation ridge model by giving the alpha parameter as the 1.
+lasso_model = cv.glmnet(x_train, y_train, alpha = 1,lambda = lambdas)
+plot(lasso_model)
+#Getting the optimum lambda value obtained from the cross validation
+lasso_opt_lambda =lasso_model$lambda.min
+lasso_opt_lambda
+#Using the optimized lambda value for initializing the ridge model
+optimized_lasso_model = glmnet(x_train,y_train,alpha = 1)
+lasso_coefficients = predict(optimized_lasso_model,type = "coefficients",s = lasso_opt_lambda)
+lasso_coefficients@x
+y_lasso_predicted = predict(lasso_model,s = lasso_opt_lambda, x_test)
+#Using the predicted and the original values to calculate r squared value for the model
+rsq <- function(x,y) cor(x,y)^2
+lasso_rsq <- rsq(y_lasso_predicted,y_test)
+#Calculating the root mean squared error for the predicted values.
+ridge_rmse = rmse(y_test,y_lasso_predicted)
+ridge_rmse
+```
+
+
+```{r}
+#PCA and PCR
+```
+
+
+```{r}
+#stripcharts of target value vs various attributes
+stripchart(value_eur/1000000~continent,data_19,vertical=TRUE,cex=0.9,main="Stripchart of players'continent vs market value",ylab="Market value in million euros",xlab="cotinent")
+stripchart(value_eur/1000000~pos,data_19,vertical=TRUE,cex=0.9,main="Stripchart of position vs market value",ylab="Market value in million euros",xlab="position")
+stripchart(value_eur/1000000~age,data_19,vertical=TRUE,cex=0.9,main="Stripchart of age vs market value",ylab="Market value in million euros",xlab="age")
+stripchart(value_eur/1000000~international_reputation,data_19,vertical=TRUE,cex=0.9,main="Stripchart of player's international reputation vs market value",ylab="Market value in million euros",xlab="international reputation")
+stripchart(value_eur/1000000~work_rate,data_19,vertical=TRUE,cex=0.9,main="Stripchart of player's work rate vs market value",ylab="Market value in million euros",xlab="work rate",cex.axis=0.5)
+stripchart(value_eur/1000000~shooting,data_19_strikers,vertical=TRUE,cex=0.9,main="Stripchart of a forward's shooting ability vs market value",ylab="Market value in million euros",xlab="Shooting rating")
+stripchart(value_eur/1000000~defending,data_19_defenders,vertical=TRUE,cex=0.9,main="Stripchart of a defender's defending ability vs market value",ylab="Market value in million euros",xlab="Defending rating")
+stripchart(value_eur/1000000~dribbling,data_19_midfielders,vertical=TRUE,cex=0.9,main="Stripchart of a midfielder's dribbling ability vs market value",ylab="Market value in million euros",xlab="Dribbling rating")
+stripchart(value_eur/1000000~gk_reflexes,data_19_goalkeepers,vertical=TRUE,cex=0.9,main="Stripchart of a goalkeeper's reflex ability vs market value",ylab="Market value in million euros",xlab="reflex rating")
+
+```
+```{r}
+stripchart(value_eur/1000000~passing,data_19_midfielders,vertical=TRUE,cex=0.9,main="Stripchart of a midfielder's passing ability vs market value",ylab="Market value in million euros",xlab="Passing rating")
+stripchart(value_eur/1000000~passing,data_19_strikers,vertical=TRUE,cex=0.9,main="Stripchart of a forward's passing vs market value",ylab="Market value in million euros",xlab="Passing rating")
+stripchart(value_eur/1000000~physic,data_19_defenders,vertical=TRUE,cex=0.9,main="Stripchart of a defender's physicality vs market value",ylab="Market value in million euros",xlab="Physical rating")
+stripchart(value_eur/1000000~gk_diving,data_19_goalkeepers,vertical=TRUE,cex=0.9,main="Stripchart of a goalkeeper's diving ability vs market value",ylab="Market value in million euros",xlab="Diving rating")
+
+```
+

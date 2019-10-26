@@ -33,6 +33,7 @@ data_19_goalkeepers <- data_19_goalkeepers[,!names(data_19_goalkeepers) %in% p]
 
 
 
+
 #data_19_strikers <- ldply(data_19_strikers,data.frame)
 
 
