@@ -13,6 +13,7 @@ data_19$body_type <- NULL
 
 
 data_19 <- data_19[-c(72:98)]
+data_19 <- data_19 %>% filter(data_19$value_eur!=0 )
 
 
 data_19$primary_position <- map(data_19$player_positions,function(x) trimws(unlist(strsplit(x,",")))[1])
