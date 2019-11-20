@@ -26,6 +26,6 @@ An adjusted R<sup>2</sup> of 0.97 is obtained, which leads to the initial belief
 ### What we plan to do in the future:
 
 * Try other models which might provide a better result in predicting the market value, like, PCR,Ridge and Lasso Regression, ANN, etc.
-* Recommend the best team with the funds available using techniques like knowledge based filtering.
+* Recommend the best team with the funds available using techniques like collaborative filtering.
 
 
