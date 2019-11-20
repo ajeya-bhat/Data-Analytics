@@ -2,7 +2,7 @@
 library(dplyr)
 library(corrplot)
 library(glmnet)
-library(countrycode)
+#library(countrycode)
 library(data.table)
 library(tidyverse)
 ```
@@ -34,22 +34,22 @@ data_19$player_tags <- NULL
 data_19$body_type <- NULL
 data_19 <- data_19 %>% filter(data_19$value_eur!=0 )
 #columns which are not needed are made null
-data_19 <- data_19[-c(72:98)]
+#data_19 <- data_19[-c(72:98)]
 #columns which have the ratig of players at various positions are ignored at the moment.
 data_19_high=subset(data_19,overall>69)
 data_19_low=subset(data_19,overall<=69)
 #data is split into 2 classes as the box plot has a lot of outliers which are due to the players who are really good
-data_19$continent=countrycode(sourcevar = data_19[, 6],
-                              origin = "country.name",
-                              destination = "continent")
-for(i in 1:nrow(data_19)){
-  if(data_19[i,6]=="England" | data_19[i,6]=="Northern Ireland" | data_19[i,6]=="Wales" | data_19[i,6]=="Scotland" | data_19[i,6]=="Kosovo"){
-    data_19[i,]$continent="Europe"
-  }
-  if(data_19[i,6]=="São Tomé & Príncipe"|data_19[i,6]=="Central African Rep."|data_19[i,6]== "SÃ£o TomÃ© & PrÃ�ncipe"){
-    data_19[i,]$continent="Africa"
-  }
-}
+#data_19$continent=countrycode(sourcevar = data_19[, 6],
+#                              origin = "country.name",
+#                              destination = "continent")
+#for(i in 1:nrow(data_19)){
+#  if(data_19[i,6]=="England" | data_19[i,6]=="Northern Ireland" | data_19[i,6]=="Wales" | #data_19[i,6]=="Scotland" | data_19[i,6]=="Kosovo"){
+#    data_19[i,]$continent="Europe"
+#  }
+#  if(data_19[i,6]=="São Tomé & Príncipe"|data_19[i,6]=="Central African Rep."|data_19[i,6]== "SÃ£o TomÃ© #& PrÃ�ncipe"){
+#    data_19[i,]$continent="Africa"
+#  }
+#}
 #players grouped into continents
 data_19$player_positions=as.character(data_19$player_positions)
 data_19$primary_position <- map(data_19$player_positions,function(x) trimws(unlist(strsplit(x,',')))[1])
@@ -111,22 +111,22 @@ data1b$preferred_foot=factor(data1b$preferred_foot)
 #datacor=cor(data1b)
 #data1b
 
-y <- data1b$value_eur
-x = subset(data1b,select = -c(value_eur,continent)) %>% data.matrix()
-data1b$value_eur <- NULL
-model1 <- lm(y ~ ., data = data1b)
+#y <- data1b$value_eur
+#x = subset(data1b,select = -c(value_eur,continent)) %>% data.matrix()
+#data1b$value_eur <- NULL
+#model1 <- lm(y ~ ., data = data1b)
 #print(summary(model1))
 #plot(model1)
 #hist(y)
-y_log=log(y)
+#y_log=log(y)
 #data transformation to make residuals not to follow a pattern
 #hist(y_log)
-model1 <- lm(y_log ~ ., data = data1b)
+#model1 <- lm(y_log ~ ., data = data1b)
 
 #print(summary(model1))
-plot(model1,which=c(1,2))
+#plot(model1,which=c(1,2))
 #residual plot and qq plot
-round(summary(model1)$adj.r.squared,5)
+#round(summary(model1)$adj.r.squared,5)
 #adjusted r^2
 ```
 
@@ -208,8 +208,15 @@ stripchart(value_eur/1000000~shooting,data_19_strikers,vertical=TRUE,cex=0.9,mai
 stripchart(value_eur/1000000~defending,data_19_defenders,vertical=TRUE,cex=0.9,main="Stripchart of a defender's defending ability vs market value",ylab="Market value in million euros",xlab="Defending rating")
 stripchart(value_eur/1000000~dribbling,data_19_midfielders,vertical=TRUE,cex=0.9,main="Stripchart of a midfielder's dribbling ability vs market value",ylab="Market value in million euros",xlab="Dribbling rating")
 stripchart(value_eur/1000000~gk_reflexes,data_19_goalkeepers,vertical=TRUE,cex=0.9,main="Stripchart of a goalkeeper's reflex ability vs market value",ylab="Market value in million euros",xlab="reflex rating")
+stripchart(value_eur/1000000~attacking_crossing,data_19_strikers,vertical=TRUE,cex=0.9,main="Stripchart of a attacking crossing vs market value",ylab="Market value in million euros",xlab="reflex rating")
+stripchart(value_eur/1000000~attacking_finishing,data_19_strikers,vertical=TRUE,cex=0.9,main="Stripchart of a attacking finishing vs market value",ylab="Market value in million euros",xlab="reflex rating")
+stripchart(value_eur/1000000~attacking_heading_accuracy,data_19_strikers,vertical=TRUE,cex=0.9,main="Stripchart of a attacking heading accuracy vs market value",ylab="Market value in million euros",xlab="reflex rating")
+stripchart(value_eur/1000000~attacking_short_passing,data_19_midfielders,vertical=TRUE,cex=0.9,main="Stripchart of a attacking short passing vs market value",ylab="Market value in million euros",xlab="reflex rating")
+stripchart(value_eur/1000000~skill_dribbling,data_19_midfielders,vertical=TRUE,cex=0.9,main="Stripchart of a attacking skill dribbling vs market value",ylab="Market value in million euros",xlab="reflex rating")
+stripchart(value_eur/1000000~skill_dribbling,data_19_strikers,vertical=TRUE,cex=0.9,main="Stripchart of a attacking short passing vs market value",ylab="Market value in million euros",xlab="reflex rating")
 
 ```
+
 ```{r}
 stripchart(value_eur/1000000~passing,data_19_midfielders,vertical=TRUE,cex=0.9,main="Stripchart of a midfielder's passing ability vs market value",ylab="Market value in million euros",xlab="Passing rating")
 stripchart(value_eur/1000000~passing,data_19_strikers,vertical=TRUE,cex=0.9,main="Stripchart of a forward's passing vs market value",ylab="Market value in million euros",xlab="Passing rating")
