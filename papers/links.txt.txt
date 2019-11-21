@@ -1,4 +1,0 @@
-https://www.kaggle.com/mauryashubham/linear-regression-to-predict-market-value
-
-https://devpost.com/software/recommendation-system-for-soccer-transfer-market
-
