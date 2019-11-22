@@ -5,7 +5,7 @@ With all teams not having a big budget, the ones with a smaller budget have to m
 ### The aim of this project is to:
 * Predict the market value of footballers given various attributes of them like age, team, overall rating and their market value from the years
 before.
-* Given the money allotted to buy players, recommend the best possible team .
+* Given a particular team and formation, recommend a replacement to the team such that there is an improvement in the team.
 
 <br>
 The data used is the fifa dataset from the years 2015 to 2020 , courtesy Kaggle.
@@ -17,9 +17,13 @@ The repo has the following folders: <br>
 * Literature survey: Contains the literature survey document.<br>
 
 ### Code: <br>
-* .py:<br>
-* .rmd:<br>
-* .rmd:<br>
+* PreprocessEDA.rmd: Code for Preprocessing and Exploratory data analysis <br>
+* RecommendationSystem.ipynb: Code for team recommendation<br>
+* Neural_Network.py: Code for the neural network model for market value prediction<br>
+* Lasso_regression.rmd: Code for lasso regression model for market value prediction<br>
+* Ridge_regression.rmd: Code for ridge regression model for market value prediction<br>
+* Linear_models.rmd: Code for the linear regression model for market value prediction<br>
+* ts.rmd: Code for the time series <br>
 
 ### Papers
 * dataanalysis: Referred to get an idea for EDA<br>
@@ -36,9 +40,4 @@ It has the following data:<br>
 * players_19.csv: Data about players from 2019<br>
 * players_20.csv: Data about players from 2020<br>
 
-### Literature survey
-* Has the literature survey document. The papers studied for the project and the various aspects each paper provides is mentioned in detail.
-
-
-Neural Network has been proven in the paper to be a good tool for building a decision support system for a football team manager.  There are some attributes that a football player may have which cannot be neglected when it comes to choosing a rightful player for a football team. This system has employed the idea of neural network in considering this large amount of attributes needed in secting the rightful player for a football team. The result generated from the system has shown that neural network technique can help the football managers in player selection for a football team. 
  
