@@ -7,7 +7,7 @@ library(data.table)
 library(tidyverse)
 ```
 ```{r}
-setwd("D:/5th_Sem_pdfs/Data_Analytics/Ajeya_Data-Analytics/fifa-20-complete-player-dataset")
+#setwd("D:/5th_Sem_pdfs/Data_Analytics/Ajeya_Data-Analytics/fifa-20-complete-player-dataset")
 data_19=read.csv("players_19.csv")
 #data_19 <-data_19 %>% na.omit()
 data_18=read.csv("players_18.csv")
@@ -19,11 +19,7 @@ data_16=read.csv("players_16.csv")
 data_20=read.csv("players_20.csv")
 #data_20 <-data_20 %>% na.omit()
 
-data_val$v16=data_16$value_eur
-data_val$v17=data_17$value_eur
-data_val$v18=data_18$value_eur
-data_val$v19=data_19$value_eur
-data_val$v20=data_20$value_eur
+
 ```
 
 ```{r}
@@ -47,22 +43,7 @@ data_19$primary_position <- unlist(data_19$primary_position)
 ```{r}
 #new column for grouping a player based on which part of the field he plays
 data_19$pos=data_19$primary_position
-for(i in 1:nrow(data_19)){
-  if(data_19[i,]$primary_position=="ST" | data_19[i,]$primary_position=="LW" | data_19[i,]$primary_position=="RW" | data_19[i,]$primary_position=="CF" | data_19[i,]$primary_position=="RF" | data_19[i,]$primary_position=="LF" | 
-     data_19[i,]$primary_position=="RS" |data_19[i,]$primary_position=="LS" ){
-    data_19[i,]$pos="Forward"
-  }
-  if(data_19[i,]$primary_position=="CM" |data_19[i,]$primary_position=="LM" |data_19[i,]$primary_position=="LDM" |data_19[i,]$primary_position=="RM" |data_19[i,]$primary_position=="CDM" |data_19[i,]$primary_position=="CAM" |data_19[i,]$primary_position=="RDM" |data_19[i,]$primary_position=="LAM" |data_19[i,]$primary_position=="RAM" |data_19[i,]$primary_position=="LCM" |data_19[i,]$primary_position=="RCM" ){
-    data_19[i,]$pos="Midfielder"
-  }
-  if(data_19[i,]$primary_position=="LCB" |data_19[i,]$primary_position=="RCB" |data_19[i,]$primary_position=="LWB" |data_19[i,]$primary_position=="RWB" |
-     data_19[i,]$primary_position=="LB" |data_19[i,]$primary_position=="CB" |data_19[i,]$primary_position=="RB" ){
-    data_19[i,]$pos="Back"
-  }
-  if(data_19[i,]$primary_position=="GK" ){
-    data_19[i,]$pos="Keeper"
-  }
-}
+
 #primary position column having the players'best/favourite position
 data_19_strikers <- data_19 %>% filter(data_19$primary_position %in% c("ST","RW","LW","CF","RF","LF","RS","LS"))
 data_19_midfielders <-  data_19 %>% filter(data_19$primary_position %in% c("RCM","LCM","CM","LM","RM","CDM","LDM","RDM","LAM","CAM","RAM"))
@@ -88,30 +69,29 @@ data_19_goalkeepers$position<-"K"
 
 #stripcharts of target value vs various attributes
 par(mfrow=c(2,3))
-stripchart(v16/1000000,data_val,vertical=TRUE,cex=0.9,main="Stripchart of year 2016 vs market value",ylab="Market value in million euros")
-stripchart(v17/1000000,data_val,vertical=TRUE,cex=0.9,main="Stripchart of year 2017 vs market value",ylab="Market value in million euros")
-stripchart(v18/1000000,data_val,vertical=TRUE,cex=0.9,main="Stripchart of year 2018 vs market value",ylab="Market value in million euros")
-stripchart(v19/1000000,data_val,vertical=TRUE,cex=0.9,main="Stripchart of year 2019 vs market value",ylab="Market value in million euros")
-stripchart(v20/1000000,data_val,vertical=TRUE,cex=0.9,main="Stripchart of year 2020 vs market value",ylab="Market value in million euros")
+stripchart(data_16$value_eur/1000000,vertical=TRUE,cex=0.7,main="Stripchart of year 2016 vs market value",ylab="Market value in million euros")
+stripchart(data_17$value_eur/1000000,vertical=TRUE,cex=0.7,main="Stripchart of year 2017 vs market value",ylab="Market value in million euros")
+stripchart(data_18$value_eur/1000000,vertical=TRUE,cex=0.7,main="Stripchart of year 2018 vs market value",ylab="Market value in million euros")
+stripchart(data_19$value_eur/1000000,vertical=TRUE,cex=0.7,main="Stripchart of year 2019 vs market value",ylab="Market value in million euros")
+stripchart(data_20$value_eur/1000000,vertical=TRUE,cex=0.7,main="Stripchart of year 2020 vs market value",ylab="Market value in million euros")
 par(mfrow=c(1,1))
-stripchart(value_eur/1000000~pos,data_19,vertical=TRUE,cex=0.9,main="Stripchart of position vs market value",ylab="Market value in million euros",xlab="position")
-stripchart(value_eur/1000000~age,data_19,vertical=TRUE,cex=0.9,main="Stripchart of age vs market value",ylab="Market value in million euros",xlab="age")
-stripchart(value_eur/1000000~international_reputation,data_19,vertical=TRUE,cex=0.9,main="Stripchart of player's international reputation vs market value",ylab="Market value in million euros",xlab="international reputation")
-stripchart(value_eur/1000000~work_rate,data_19,vertical=TRUE,cex=0.9,main="Stripchart of player's work rate vs market value",ylab="Market value in million euros",xlab="work rate",cex.axis=0.5)
-stripchart(value_eur/1000000~shooting,data_19_strikers,vertical=TRUE,cex=0.9,main="Stripchart of a forward's shooting ability vs market value",ylab="Market value in million euros",xlab="Shooting rating")
-stripchart(value_eur/1000000~defending,data_19_defenders,vertical=TRUE,cex=0.9,main="Stripchart of a defender's defending ability vs market value",ylab="Market value in million euros",xlab="Defending rating")
-stripchart(value_eur/1000000~dribbling,data_19_midfielders,vertical=TRUE,cex=0.9,main="Stripchart of a midfielder's dribbling ability vs market value",ylab="Market value in million euros",xlab="Dribbling rating")
-stripchart(value_eur/1000000~gk_reflexes,data_19_goalkeepers,vertical=TRUE,cex=0.9,main="Stripchart of a goalkeeper's reflex ability vs market value",ylab="Market value in million euros",xlab="reflex rating")
-stripchart(value_eur/1000000~attacking_crossing,data_19_strikers,vertical=TRUE,cex=0.9,main="Stripchart of a forward's attacking crossing vs market value",ylab="Market value in million euros",xlab="reflex rating")
-stripchart(value_eur/1000000~attacking_finishing,data_19_strikers,vertical=TRUE,cex=0.9,main="Stripchart of a forward's attacking finishing vs market value",ylab="Market value in million euros",xlab="reflex rating")
-stripchart(value_eur/1000000~attacking_heading_accuracy,data_19_strikers,vertical=TRUE,cex=0.9,main="Stripchart of a forward's attacking heading accuracy vs market value",ylab="Market value in million euros",xlab="reflex rating")
-stripchart(value_eur/1000000~attacking_short_passing,data_19_midfielders,vertical=TRUE,cex=0.9,main="Stripchart of a midfielder's attacking short passing vs market value",ylab="Market value in million euros",xlab="reflex rating")
-stripchart(value_eur/1000000~skill_dribbling,data_19_midfielders,vertical=TRUE,cex=0.9,main="Stripchart of a midfielder's skill dribbling vs market value",ylab="Market value in million euros",xlab="reflex rating")
-stripchart(value_eur/1000000~short_passing,data_19_strikers,vertical=TRUE,cex=0.9,main="Stripchart of a forward's short passing vs market value",ylab="Market value in million euros",xlab="reflex rating")
-
-stripchart(value_eur/1000000~passing,data_19_midfielders,vertical=TRUE,cex=0.9,main="Stripchart of a midfielder's passing ability vs market value",ylab="Market value in million euros",xlab="Passing rating")
-stripchart(value_eur/1000000~passing,data_19_strikers,vertical=TRUE,cex=0.9,main="Stripchart of a forward's passing vs market value",ylab="Market value in million euros",xlab="Passing rating")
-stripchart(value_eur/1000000~physic,data_19_defenders,vertical=TRUE,cex=0.9,main="Stripchart of a defender's physicality vs market value",ylab="Market value in million euros",xlab="Physical rating")
-stripchart(value_eur/1000000~gk_diving,data_19_goalkeepers,vertical=TRUE,cex=0.9,main="Stripchart of a goalkeeper's diving ability vs market value",ylab="Market value in million euros",xlab="Diving rating")
+par(mfrow=c(2,2))
+stripchart(value_eur/1000000~pos,data_19,vertical=TRUE,cex=0.7,main="Stripchart of position vs market value",ylab="Market value in million euros",xlab="position")
+stripchart(value_eur/1000000~age,data_19,vertical=TRUE,cex=0.7,main="Stripchart of age vs market value",ylab="Market value in million euros",xlab="age")
+stripchart(value_eur/1000000~international_reputation,data_19,vertical=TRUE,cex=0.7,main="Stripchart of player's international reputation vs market value",ylab="Market value in million euros",xlab="international reputation")
+stripchart(value_eur/1000000~work_rate,data_19,vertical=TRUE,cex=0.7,main="Stripchart of player's work rate vs market value",ylab="Market value in million euros",xlab="work rate",cex.axis=0.5)
+stripchart(value_eur/1000000~shooting,data_19_strikers,vertical=TRUE,cex=0.7,main="Stripchart of a forward's shooting ability vs market value",ylab="Market value in million euros",xlab="Shooting rating")
+stripchart(value_eur/1000000~defending,data_19_defenders,vertical=TRUE,cex=0.7,main="Stripchart of a defender's defending ability vs market value",ylab="Market value in million euros",xlab="Defending rating")
+stripchart(value_eur/1000000~dribbling,data_19_midfielders,vertical=TRUE,cex=0.7,main="Stripchart of a midfielder's dribbling ability vs market value",ylab="Market value in million euros",xlab="Dribbling rating")
+stripchart(value_eur/1000000~gk_reflexes,data_19_goalkeepers,vertical=TRUE,cex=0.7,main="Stripchart of a goalkeeper's reflex ability vs market value",ylab="Market value in million euros",xlab="reflex rating")
+stripchart(value_eur/1000000~attacking_crossing,data_19_strikers,vertical=TRUE,cex=0.7,main="Stripchart of a forward's attacking crossing vs market value",ylab="Market value in million euros",xlab="reflex rating")
+stripchart(value_eur/1000000~attacking_finishing,data_19_strikers,vertical=TRUE,cex=0.7,main="Stripchart of a forward's attacking finishing vs market value",ylab="Market value in million euros",xlab="reflex rating")
+stripchart(value_eur/1000000~attacking_heading_accuracy,data_19_strikers,vertical=TRUE,cex=0.7,main="Stripchart of a forward's attacking heading accuracy vs market value",ylab="Market value in million euros",xlab="reflex rating")
+stripchart(value_eur/1000000~attacking_short_passing,data_19_midfielders,vertical=TRUE,cex=0.7,main="Stripchart of a midfielder's attacking short passing vs market value",ylab="Market value in million euros",xlab="reflex rating")
+stripchart(value_eur/1000000~skill_dribbling,data_19_midfielders,vertical=TRUE,cex=0.7,main="Stripchart of a midfielder's skill dribbling vs market value",ylab="Market value in million euros",xlab="reflex rating")
+stripchart(value_eur/1000000~passing,data_19_midfielders,vertical=TRUE,cex=0.7,main="Stripchart of a midfielder's passing ability vs market value",ylab="Market value in million euros",xlab="Passing rating")
+stripchart(value_eur/1000000~passing,data_19_strikers,vertical=TRUE,cex=0.7,main="Stripchart of a forward's passing vs market value",ylab="Market value in million euros",xlab="Passing rating")
+stripchart(value_eur/1000000~physic,data_19_defenders,vertical=TRUE,cex=0.7,main="Stripchart of a defender's physicality vs market value",ylab="Market value in million euros",xlab="Physical rating")
+stripchart(value_eur/1000000~gk_diving,data_19_goalkeepers,vertical=TRUE,cex=0.7,main="Stripchart of a goalkeeper's diving ability vs market value",ylab="Market value in million euros",xlab="Diving rating")
 
 ```
