@@ -1,0 +1,169 @@
+---
+title: "Ridge_Regression"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(corrplot)
+library(tidyverse)
+library(data.table)
+library(glmnet)
+library(countrycode)
+```
+
+```{r}
+#Preprocessing Function
+preprocessing = function(path) {
+    
+data_19 = read.csv(path,header = TRUE,stringsAsFactors = FALSE)
+
+data_19$ID<-NULL
+data_19$player_url <- NULL
+data_19$dob <- NULL
+data_19$real_face <- NULL
+data_19$player_traits <- NULL
+data_19$long_name <- NULL
+data_19$player_tags <- NULL
+data_19$body_type <- NULL
+data_19 <- data_19 %>% filter(data_19$value_eur!=0)
+#columns which are not needed are made null
+data_19 <- data_19[-c(72:98)]
+#columns which have the ratig of players at various positions are ignored at the moment.
+#data_19_high=subset(data_19,overall>69)
+#data_19_low=subset(data_19,overall<=69)
+#data is split into 2 classes as the box plot has a lot of outliers which are due to the players who are really good
+data_19$continent=countrycode(sourcevar = data_19[, 6],
+                              origin = "country.name",
+                              destination = "continent")
+for(i in 1:nrow(data_19)){
+  if(data_19[i,6]=="England" | data_19[i,6]=="Northern Ireland" | data_19[i,6]=="Wales" | data_19[i,6]=="Scotland" | data_19[i,6]=="Kosovo"){
+    data_19[i,]$continent="Europe"
+  }
+  if(data_19[i,6]=="São Tomé & Príncipe"|data_19[i,6]=="Central African Rep."|data_19[i,6]== "SÃ£o TomÃ© & PrÃ�ncipe"){
+    data_19[i,]$continent="Africa"
+  }
+}
+#players grouped into continents
+data_19$player_positions=as.character(data_19$player_positions)
+data_19$primary_position <- map(data_19$player_positions,function(x) trimws(unlist(strsplit(x,',')))[1])
+data_19$primary_position <- unlist(data_19$primary_position)
+
+data_19_strikers <- data_19 %>% filter(data_19$primary_position %in% c("ST","RW","LW","CF","RF","LF","RS","LS"))
+data_19_midfielders <-  data_19 %>% filter(data_19$primary_position %in% c("RCM","LCM","CM","LM","RM","CDM","LDM","RDM","LAM","CAM","RAM"))
+data_19_defenders <- data_19 %>% filter(data_19$primary_position %in% c("CB","LB","RB","RCB","LCB","RWB","LWB"))
+data_19_goalkeepers <- data_19 %>% filter(data_19$primary_position %in% c("GK"))
+q <- colnames(data_19_defenders)
+                                
+q <- grep("^gk_+",q,value = TRUE)
+p <- c("pace","shooting","passing","dribbling","defending","physic")
+data_19_strikers <- data_19_strikers[,!names(data_19_strikers) %in% q]
+data_19_defenders <- data_19_defenders[,!names(data_19_defenders) %in% q]
+data_19_midfielders <- data_19_midfielders[,!names(data_19_midfielders) %in% q]
+data_19_goalkeepers <- data_19_goalkeepers[,!names(data_19_goalkeepers) %in% p]
+data_19_strikers$position<-"F"
+data_19_defenders$position<-"B"
+data_19_midfielders$position<-"M"
+data_19_goalkeepers$position<-"K"
+                                
+return(list(data_19_strikers,data_19_midfielders,data_19_defenders,data_19_goalkeepers))
+}            
+
+```
+
+```{r}
+#RidgeRegression
+RidgeRegression = function(dataset,attributes){
+set.seed(101)
+dataset=dataset[,attributes]
+dataset$preferred_foot=factor(dataset$preferred_foot)
+y <- dataset$value_eur
+x = subset(dataset,select = -c(value_eur)) %>% data.matrix()
+#sample <- sample.int(n = nrow(x), size = floor(.8*nrow(x)), replace = F)
+#x_train <- x[sample, ]
+#x_test  <- x[-sample, ]
+y_log = log(y)
+y <- y_log %>% data.matrix()
+#y_train <- y[sample,]
+#y_test <- y[-sample,]
+lambdas = 10^seq(3,-2,by = -.1)
+ridge_model = cv.glmnet(x,y, alpha = 0, lambda = lambdas)
+#plot(ridge_model)
+ridge_opt_lambda = ridge_model$lambda.min
+#ridge_opt_lambda
+#optimized_ridge_model = glmnet(x_train,y_train,alpha = 0)
+#ridge_coefficients = predict(optimized_ridge_model,type = "coefficients",s = ridge_opt_lambda)
+#ridge_coefficients@x
+#y_ridge_predicted = predict(ridge_model,s = ridge_opt_lambda, x_test)
+#rsq <- function(x,y) cor(x,y)^2
+#ridge_rsq <- rsq(y_ridge_predicted,y_test)
+#ridge_rmse = rmse(y_test,y_ridge_predicted)
+    
+return(list(ridge_model,ridge_opt_lambda))
+}
+```
+
+```{r}
+rsq <- function(x,y) cor(x,y)^2
+
+Linearmodel_test = function(model,testdata,attributes){
+    testdata=testdata[,attributes]
+    testdata$preferred_foot=factor(testdata$preferred_foot)
+    y = testdata$value_eur 
+    x = subset(testdata,select = -c(value_eur))
+    y_predicted = predict(model,x)
+    return(rsq(y_predicted,y))
+}
+
+RidgeLasso_test = function(model,lambda,testdata,attributes){
+    testdata=testdata[,attributes]
+    testdata$preferred_foot=factor(testdata$preferred_foot)
+    y = testdata$value_eur
+    x = subset(testdata,select = -c(value_eur)) %>% data.matrix()
+    y_predicted = predict(model,s = lambda,x)
+    return(rsq(y_predicted,y))
+}
+```
+
+```{r}
+all_year_data = list()
+paths = c("players_16.csv",
+          "players_17.csv",
+          "players_18.csv",
+          "players_19.csv")
+count = 1
+for(i in paths){
+    all_year_data[[count]] = preprocessing(i)
+    count = count + 1
+}
+year_20_data = preprocessing("players_20.csv")
+year_20_strikers = data.frame(year_20_data[[1]])
+year_20_midfielders = data.frame(year_20_data[[2]])
+year_20_defenders = data.frame(year_20_data[[3]])
+year_20_goalkeepers = data.frame(year_20_data[[4]])
+```
+
+```{r}
+#all_year_strikers <- data.frame(matrix(unlist(all_year_strikers), nrow=nrow(all_year_strikers), byrow=T),stringsAsFactors=FALSE)
+striker_attributes = c(3,4,8,10,13,14,16,26,27,28,29,31)
+midfielder_attributes = c(3,4,8,10,13,14,16,26,27,28,29,31)
+defenders_attributes = c(3,4,8,10,13,14,16,26,28,30)
+
+Ridge_result = RidgeRegression(all_year_strikers,striker_attributes)
+Ridge_model = Ridge_result[[1]]
+Ridge_opt_lambda = Ridge_result[[2]]
+Ridge_rsq = RidgeLasso_test(Ridge_model,Ridge_opt_lambda,year_20_strikers,striker_attributes)
+Ridge_rsq
+
+Ridge_result = RidgeRegression(all_year_midfielders,midfielder_attributes)
+Ridge_model = Ridge_result[[1]]
+Ridge_opt_lambda = Ridge_result[[2]]
+Ridge_rsq = RidgeLasso_test(Ridge_model,Ridge_opt_lambda,year_20_midfielders,midfielder_attributes)
+Ridge_rsq
+
+Ridge_result = RidgeRegression(all_year_defenders,defenders_attributes)
+Ridge_model = Ridge_result[[1]]
+Ridge_opt_lambda = Ridge_result[[2]]
+Ridge_rsq = RidgeLasso_test(Ridge_model,Ridge_opt_lambda,year_20_strikers,defenders_attributes)
+Ridge_rsq
+```
