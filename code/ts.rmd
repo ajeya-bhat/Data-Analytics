@@ -1,3 +1,103 @@
+<<<<<<< HEAD
+```{r}
+library(TTR)
+library(dplyr)
+```
+
+```{r}
+setwd("D:/5th_Sem_pdfs/Data_Analytics/Ajeya_Data-Analytics/fifa-20-complete-player-dataset")
+data_19=read.csv("players_19.csv")
+#data_19 <-data_19 %>% na.omit()
+data_18=read.csv("players_18.csv")
+#data_18 <-data_18 %>% na.omit()
+data_17=read.csv("players_17.csv")
+#data_17 <-data_17 %>% na.omit()
+data_16=read.csv("players_16.csv")
+#data_16 <-data_16 %>% na.omit()
+data_20=read.csv("players_20.csv")
+#data_20 <-data_20 %>% na.omit()
+```
+```{r}
+setwd("D:/5th_Sem_pdfs/Data_Analytics/Ajeya_Data-Analytics/fifa-20-complete-player-dataset")
+p_20 <- read.csv("players_20.csv",header = TRUE,stringsAsFactors = FALSE)
+p_19 <- read.csv("players_19.csv",header = TRUE,stringsAsFactors = FALSE)
+p_18 <- read.csv("players_18.csv",header = TRUE,stringsAsFactors = FALSE)
+p_17 <- read.csv("players_17.csv",header = TRUE,stringsAsFactors = FALSE)
+p_16 <- read.csv("players_16.csv",header = TRUE,stringsAsFactors = FALSE)
+
+p_20 <- p_20 %>% select("sofifa_id","short_name","value_eur")
+p_19 <- p_19 %>% select("sofifa_id","value_eur")
+p_18 <- p_18 %>% select("sofifa_id","value_eur")
+p_17 <- p_17 %>% select("sofifa_id","value_eur")
+p_16 <- p_16 %>% select("sofifa_id","value_eur")
+
+
+
+all_ids = p_20$sofifa_id
+p_19 <- p_19 %>% filter(p_19$sofifa_id %in% c(all_ids))
+p_18 <- p_18 %>% filter(p_18$sofifa_id %in% c(all_ids))
+p_17 <- p_17 %>% filter(p_17$sofifa_id %in% c(all_ids))
+p_16 <- p_16 %>% filter(p_16$sofifa_id %in% c(all_ids))
+
+
+
+colnames(p_16)[2] <- "y_2016"
+colnames(p_17)[2] <- "y_2017"
+colnames(p_18)[2] <- "y_2018"
+colnames(p_19)[2] <- "y_2019"
+
+
+p_time <- data.frame("sofifa_id"=p_20$sofifa_id)
+p_time$short_name <- p_20$short_name
+p_time <- merge(x=p_time,y=p_16,by="sofifa_id",all.x=TRUE)
+p_time <- merge(x=p_time,y=p_17,by="sofifa_id",all.x=TRUE)
+p_time <- merge(x=p_time,y=p_18,by="sofifa_id",all.x=TRUE)
+p_time <- merge(x=p_time,y=p_19,by="sofifa_id",all.x=TRUE)
+p_20$short_name <- NULL
+p_time <- merge(x=p_time,y=p_20,by="sofifa_id",all.x=TRUE)
+p_time
+
+library(TTR)
+par(mfrow=c(2,2))
+#TS plots for 5 random players
+#Buffon
+c1=list(9000000,9000000,4500000,4000000,2600000)
+c1=ts(unlist(c1))
+c1
+plot.ts(c1,main="Time series plot for Buffon")
+
+c1=SMA(c1,n=2)
+plot.ts(c1,main="Moving average plot for Buffon")
+#Ronaldo
+c2=list(85500000,87000000,95500000,77000000,58500000)
+c2=ts(unlist(c2))
+c2
+plot.ts(c2,main="Time series plot for Ronaldo")
+c2=SMA(c2,n=2)
+plot.ts(c2,main="Moving average plot for Ronaldo")
+#Bastian Schweinsteiger
+c3=list(35000000,19000000,13500000,8500000,2900000)
+c3=ts(unlist(c3))
+c3
+plot.ts(c3,main="Time series plot for Bastian Schweinsteiger")
+c3=SMA(c3,n=2)
+
+plot.ts(c3,main="Moving average plot for Bastian Schweinsteiger")
+#B.Roche
+c4=list(1500000,1300000,2100000,1200000,1100000)
+  c4=ts(unlist(c4))
+  c4
+  plot.ts(c4,main="Time series plot for Roche")
+  c4=SMA(c4,n=2)
+  plot.ts(c4,main="Moving average plot for Roche")
+#Adrian Mariappa
+c5=list(1300000,1600000,2200000,3800000,4300000,4300000)
+  c5=ts(unlist(c5))
+  c5
+  plot.ts(c5,main="Time series plot for Adrian Mariappa")
+  c5=SMA(c5,n=2)
+  plot.ts(c5,main="Moving average plot for Adrian Mariappa")
+=======
 ```{r}
 library(TTR)
 library(dplyr)
@@ -105,4 +205,5 @@ c5=list(1300000,1600000,2200000,3800000,4300000,4300000)
   c5=SMA(c5,n=2)
   plot.ts(c5)
   plot.title("Moving average plot for Adrian Mariappa")
+>>>>>>> e182479203978c2ff6cc81f36c2ce44c8be3bdf6
 ```

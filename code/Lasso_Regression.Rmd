@@ -102,22 +102,13 @@ return(list(lasso_model,lasso_opt_lambda))
 ```{r}
 rsq <- function(x,y) cor(x,y)^2
 
-Linearmodel_test = function(model,testdata,attributes){
-    testdata=testdata[,attributes]
-    testdata$preferred_foot=factor(testdata$preferred_foot)
-    y = testdata$value_eur 
-    x = subset(testdata,select = -c(value_eur))
-    y_predicted = predict(model,x)
-    return(rsq(y_predicted,y))
-}
-
 RidgeLasso_test = function(model,lambda,testdata,attributes){
     testdata=testdata[,attributes]
     testdata$preferred_foot=factor(testdata$preferred_foot)
     y = testdata$value_eur
     x = subset(testdata,select = -c(value_eur)) %>% data.matrix()
     y_predicted = predict(model,s = lambda,x)
-    return(rsq(y_predicted,y))
+    return(c(rsq(y_predicted,y),sqrt(sum((y_predicted-y)^2)/length(y))))
 }
 ```
 
@@ -148,18 +139,21 @@ defenders_attributes = c(3,4,8,10,13,14,16,26,28,30)
 Lasso_result = LassoRegression(all_year_strikers,striker_attributes)
 Lasso_model = Lasso_result[[1]]
 Lasso_opt_lambda = Lasso_result[[2]]
-Lasso_rsq = RidgeLasso_test(Ridge_model,Lasso_opt_lambda,year_20_strikers,striker_attributes)
-Lasso_rsq
+Lasso_output = RidgeLasso_test(Ridge_model,Lasso_opt_lambda,year_20_strikers,striker_attributes)
+Lasso_output[0]
+Lasso_output[1]
 
 Lasso_result = LassoRegression(all_year_defenders,midfielder_attributes)
 Lasso_model = Lasso_result[[1]]
 Lasso_opt_lambda = Lasso_result[[2]]
-Lasso_rsq = RidgeLasso_test(Ridge_model,Lasso_opt_lambda,year_20_midfielders,midfielder_attributes)
-Lasso_rsq
+Lasso_output = RidgeLasso_test(Ridge_model,Lasso_opt_lambda,year_20_midfielders,midfielder_attributes)
+Lasso_output[0]
+Lasso_output[1]
 
 Lasso_result = LassoRegression(all_year_defenders,defenders_attributes)
 Lasso_model = Lasso_result[[1]]
 Lasso_opt_lambda = Lasso_result[[2]]
-Lasso_rsq = RidgeLasso_test(Ridge_model,Lasso_opt_lambda,year_20_defenders,defenders_attributes)
-Lasso_rsq
+Lasso_output = RidgeLasso_test(Ridge_model,Lasso_opt_lambda,year_20_defenders,defenders_attributes)
+Lasso_output[0]
+Lasso_output[1]
 ```
